@@ -33,7 +33,6 @@ const Canvas = styled.div`
 const Menu = styled.div`
   display: flex;
   position: fixed;
-  justify-content: center;
   flex-direction: column;
   left: -9rem;
   top: 0;
@@ -52,6 +51,7 @@ const Menu = styled.div`
 
 const MenuButton = styled.button`
   width: 80%;
+  justify-content: center;
   height: 1.5rem;
   overflow: hidden;
   color: grey;
@@ -70,6 +70,7 @@ const MenuButton = styled.button`
 class App extends Component {
   draw = false;
   drawType = "circle";
+  spraySize = 2;
   state = { drawColor: "hsl(255,0%,0%)", showMenu: true };
   lastPosition = { x: null, y: null };
 
@@ -85,17 +86,22 @@ class App extends Component {
   sprayPaint = () => {
     const { ctx } = this;
     const { x, y } = this.pos;
-    const { ox, oy } = {
-      ox: x + Math.random() * 10 - 5,
-      oy: y + Math.random() * 10 - 5
-    };
+
     switch (this.drawType) {
       case "circle":
         const circle = new Path2D();
-        circle.moveTo(ox, oy);
-        circle.arc(ox, oy, 10, 0, 2 * Math.PI);
-        ctx.fill(circle);
-        if (this.ctx.globalAlpha < 0.05) this.ctx.globalAlpha += 0.0001;
+        for (let i = 0; i < 25; ++i) {
+          let { ox, oy } = {
+            ox: x + Math.random() * this.spraySize - 5,
+            oy: y + Math.random() * this.spraySize - 5
+          };
+
+          circle.moveTo(ox, oy);
+          circle.arc(ox, oy, 1, 0, 2 * Math.PI);
+          ctx.fill(circle);
+        }
+        if (this.ctx.globalAlpha < 0.01) this.ctx.globalAlpha += 0.0001;
+        this.spraySize += 0.01;
         break;
       default:
       case "line":
@@ -130,8 +136,9 @@ class App extends Component {
     this.pos = { x, y };
     this.draw = true;
     this.ctx.fillStyle = this.state.drawColor;
-    this.ctx.globalAlpha = 0.003;
+    this.ctx.globalAlpha = 0.0001;
     this.ctx.strokeStyle = this.state.drawColor;
+    this.spraySize = 2;
     if (!this.drawInterval) {
       this.drawInterval = setInterval(this.sprayPaint, 1);
     }
