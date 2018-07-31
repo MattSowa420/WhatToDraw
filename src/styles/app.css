@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  padding: 0;
+  margin: 0;
+}
+
+.app {
+  padding: 0px;
+  background-color: lightblue;
+  margin: 0px;
+  text-align: center;
+}
+
+canvas {
+  margin: 1rem;
+  border: 2px solid black;
+  color: green;
+  background-color: white;
+  transition: all 0.2s cubic-bezier(0.13, 0.46, 0.86, 0.51);
+}
+
+canvas:hover {
+  border: 2px solid gold;
+}
+
+.palette {
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  border-radius: 20%;
+  transition: all 0.2s cubic-bezier(0.72, 0.21, 0.3, 0.7);
+  border: 1px solid black;
+  transform: none;
+  perspective: 100px;
+}
+
+.palette.active:hover,
+.palette.active {
+  border: 1px solid white;
+  transform: rotate(45deg);
+}
+
+.palette:hover {
+  border: 1px solid yellow;
+  transform: perspective(100px) translate3d(0, 0, 20px);
+  z-index: 10;
+}

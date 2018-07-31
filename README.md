@@ -1,2 +1,0 @@
-# WhatToDraw
-Created with CodeSandbox
