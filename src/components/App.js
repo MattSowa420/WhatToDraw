@@ -67,11 +67,50 @@ const MenuButton = styled.button`
   }
 `;
 
+const BrushMenu = styled.div`
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  opacity: 0.5;
+  height: 100%;
+  width: 100px;
+  transform: translate(90px);
+  transition: all 0.25s ease-in-out;
+  overflow: hidden;
+  background-color: darkgrey;
+  padding: 1px;
+  &:hover {
+    transform: none;
+    opacity: 0.8;
+  }
+`;
+
+const Brush = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: ${props => (!props.active ? "1px solid black" : "1px solid white")};
+  background-color: ${props => (!props.active ? "transparent" : "black")}
+  color: ${props => (!props.active ? "black" : "white")}
+  margin: 10px auto;
+  transition: all 0.25s ease-in-out;
+  &:hover {
+    color: white;
+    background-color: black;
+  }
+`;
+
 class App extends Component {
   draw = false;
   drawType = "circle";
-  spraySize = 2;
-  state = { drawColor: "hsl(255,0%,0%)", showMenu: true };
+  spraySize = 5;
+  brushes = [2, 4, 8, 16];
+  state = { drawColor: "hsl(255,0%,0%)", showMenu: true, activeBrush: 0 };
   lastPosition = { x: null, y: null };
 
   constructor() {
@@ -91,9 +130,11 @@ class App extends Component {
       case "circle":
         const circle = new Path2D();
         for (let i = 0; i < 25; ++i) {
+          let angle = Math.random() * 2 * Math.PI;
+          let distance = Math.random() ** 0.5 * this.spraySize;
           let { ox, oy } = {
-            ox: x + Math.random() * this.spraySize - 5,
-            oy: y + Math.random() * this.spraySize - 5
+            ox: x + Math.sin(angle) * distance,
+            oy: y + Math.cos(angle) * distance
           };
 
           circle.moveTo(ox, oy);
@@ -101,7 +142,6 @@ class App extends Component {
           ctx.fill(circle);
         }
         if (this.ctx.globalAlpha < 0.01) this.ctx.globalAlpha += 0.0001;
-        this.spraySize += 0.01;
         break;
       default:
       case "line":
@@ -136,9 +176,9 @@ class App extends Component {
     this.pos = { x, y };
     this.draw = true;
     this.ctx.fillStyle = this.state.drawColor;
-    this.ctx.globalAlpha = 0.0001;
+    this.ctx.globalAlpha = 0.005;
     this.ctx.strokeStyle = this.state.drawColor;
-    this.spraySize = 2;
+    this.spraySize = this.brushes[this.state.activeBrush];
     if (!this.drawInterval) {
       this.drawInterval = setInterval(this.sprayPaint, 1);
     }
@@ -165,7 +205,7 @@ class App extends Component {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   };
 
-  Canvas(w = 1000, h = 1000) {
+  Canvas(w = 500, h = 400) {
     return (
       <Canvas>
         <canvas
@@ -200,6 +240,25 @@ class App extends Component {
     );
   };
 
+  showBrushes = () => {
+    return (
+      <BrushMenu>
+        Brushes
+        {this.brushes.map((brushValue, brushNumber) => (
+          <Brush
+            onClick={() => {
+              this.setState({ activeBrush: brushNumber });
+            }}
+            key={brushValue}
+            active={this.state.activeBrush === brushNumber}
+          >
+            {brushValue}
+          </Brush>
+        ))}
+      </BrushMenu>
+    );
+  };
+
   showMenu = () => {
     return (
       <Menu showMenu={this.state.showMenu}>
@@ -215,6 +274,7 @@ class App extends Component {
       <div className="app">
         <p draggable={false}>What would you like to draw?</p>
         {this.showMenu()}
+        {this.showBrushes()}
         {this.Canvas()}
         {this.showPalette()}
       </div>
