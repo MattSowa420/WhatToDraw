@@ -2,7 +2,18 @@ import React, { Component } from "react";
 import "../styles/app.css";
 import styled from "styled-components";
 
-const hues = 6 + 8 * 4;
+const hues = [
+  (360 / 8) * 0,
+  (360 / 8) * 1,
+  (360 / 8) * 2,
+  (360 / 8) * 3,
+  (360 / 8) * 4,
+  (360 / 8) * 5,
+  (360 / 8) * 6,
+  (360 / 8) * 7
+];
+const sats = [25, 50, 75, 100];
+const levs = [25, 50, 60, 75, 90];
 
 const Palette = styled.div`
   position: fixed;
@@ -13,7 +24,7 @@ const Palette = styled.div`
   width: 100%;
   background-color: lightgray;
   transition: all 0.25s ease;
-  transform: translate(-90%, 90%);
+  transform: translate(0%, 90%);
   overflow: hidden;
   &:hover {
     transform: none;
@@ -107,6 +118,7 @@ const Brush = styled.div`
 
 class App extends Component {
   draw = false;
+  pressure = 0;
   drawType = "circle";
   spraySize = 5;
   brushes = [2, 4, 8, 16];
@@ -115,21 +127,31 @@ class App extends Component {
 
   constructor() {
     super();
-    this.palette = ["hsl(255,0%,0%)", "hsl(255,100%,100%)"];
-    for (let h = 0; h < hues; ++h) {
-      const color = `hsl(${h * (256 / hues)},${80}%,${55}%)`;
-      this.palette.push(color);
-    }
+    //this.palette = ["hsl(255,0%,0%)", "hsl(255,100%,100%)"];
+    this.palette = [];
+
+    [0, 25, 50, 75, 100].forEach(lev => {
+      this.palette.push(`hsl(0,0%,${lev}%)`);
+    });
+
+    levs.forEach(lev =>
+      sats.forEach(sat =>
+        hues.forEach(hue => {
+          this.palette.push(`hsl(${hue},${sat}%,${lev}%)`);
+        })
+      )
+    );
   }
 
   sprayPaint = () => {
     const { ctx } = this;
     const { x, y } = this.pos;
-
+    if (this.pressure === 0) return;
+    this.ctx.globalAlpha = this.pressure / 10;
     switch (this.drawType) {
       case "circle":
         const circle = new Path2D();
-        for (let i = 0; i < 25; ++i) {
+        for (let i = 0; i < 5; ++i) {
           let angle = Math.random() * 2 * Math.PI;
           let distance = Math.random() ** 0.5 * this.spraySize;
           let { ox, oy } = {
@@ -141,7 +163,8 @@ class App extends Component {
           circle.arc(ox, oy, 1, 0, 2 * Math.PI);
           ctx.fill(circle);
         }
-        if (this.ctx.globalAlpha < 0.01) this.ctx.globalAlpha += 0.0001;
+        //console.log(this.pressure);
+        //if (this.ctx.globalAlpha < 0.5) this.ctx.globalAlpha += 0.001;
         break;
       default:
       case "line":
@@ -155,8 +178,12 @@ class App extends Component {
   };
 
   onMouseMove = event => {
+    //console.log("on mouse move", event.button, event.buttons);
     if (!this.draw) return;
     const { offsetX: x, offsetY: y } = event.nativeEvent;
+    if (event.pressure) this.pressure = event.pressure;
+    else this.pressure = 0;
+    //console.log(this.pressure);
     this.pos = { x, y };
   };
 
@@ -176,16 +203,17 @@ class App extends Component {
     this.pos = { x, y };
     this.draw = true;
     this.ctx.fillStyle = this.state.drawColor;
-    this.ctx.globalAlpha = 0.005;
     this.ctx.strokeStyle = this.state.drawColor;
+    this.ctx.globalAlpha = 0.1;
     this.spraySize = this.brushes[this.state.activeBrush];
     if (!this.drawInterval) {
       this.drawInterval = setInterval(this.sprayPaint, 1);
     }
-    console.log(this.drawInterval);
+    console.log("interval", this.drawInterval);
   };
 
   onMouseUp = event => {
+    console.log("on mouse up");
     this.draw = false;
     console.log("clear interval");
     clearInterval(this.drawInterval);
@@ -193,6 +221,7 @@ class App extends Component {
   };
 
   onMouseLeave = event => {
+    console.log("on mouse leave");
     this.onMouseUp();
     this.setState({ showMenu: true });
   };
@@ -205,17 +234,41 @@ class App extends Component {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   };
 
-  Canvas(w = 500, h = 400) {
+  pointerUp = () => {
+    console.log("pointer up");
+    this.onMouseUp();
+  };
+
+  pointerCancel = () => {
+    console.log("pointer cancel");
+    this.onMouseUp();
+  };
+
+  onGotPointerCapture = event => {
+    console.log(
+      "got pointer",
+      event.pointerId,
+      event.pointerType,
+      event.nativeEvent
+    );
+    //this.canvas.setPointerCapture(event.pointerId);
+  };
+
+  Canvas(w = 700, h = 800) {
     return (
       <Canvas>
         <canvas
           id="drawCanvas"
-          onMouseMove={this.onMouseMove}
-          onClick={this.onClick}
-          onMouseUp={this.onMouseUp}
-          onMouseDown={this.onMouseDown}
-          onMouseLeave={this.onMouseLeave}
-          onMouseEnter={this.hideMenu}
+          touch-action="none"
+          onPointerDown={this.onMouseDown}
+          onPointerMove={this.onMouseMove}
+          onPointerUp={this.pointerUp}
+          onPointerCancel={this.pointerCancel}
+          onGotPointerCapture={this.onGotPointerCapture}
+          onLostPointerCapture={() => {
+            console.log("lost pointer");
+            this.onMouseUp();
+          }}
           width={w}
           height={h}
         />
@@ -269,7 +322,12 @@ class App extends Component {
     );
   };
 
+  onComponentDidMount() {
+    console.log("component mounted");
+  }
+
   render() {
+    console.log("render");
     return (
       <div className="app">
         <p draggable={false}>What would you like to draw?</p>
