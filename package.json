@@ -1,7 +1,7 @@
 {
-  "name": "new",
+  "name": "sketch",
   "version": "1.0.0",
-  "description": "",
+  "description": "Project to show how to code a drawing app with an animated color palette selector.",
   "keywords": [],
   "main": "src/index.js",
   "dependencies": {

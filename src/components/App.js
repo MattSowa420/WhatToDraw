@@ -162,12 +162,15 @@ class App extends Component {
           circle.moveTo(ox, oy);
           circle.arc(ox, oy, 1, 0, 2 * Math.PI);
           ctx.fill(circle);
+
+          if (this.state.activeBrush === -1) this.spraySize += 0.001;
         }
         //console.log(this.pressure);
         //if (this.ctx.globalAlpha < 0.5) this.ctx.globalAlpha += 0.001;
         break;
       default:
       case "line":
+        ctx.globalAlpha = 1;
         ctx.beginPath();
         ctx.moveTo(this.lastPosition.x, this.lastPosition.y);
         ctx.lineTo(x, y);
@@ -177,10 +180,28 @@ class App extends Component {
     }
   };
 
+  erase = ({ x, y, alpha }) => {
+    this.ctx.save();
+    this.globalAlpha = alpha;
+    const circle = new Path2D();
+    this.ctx.fillStyle = "white";
+    circle.moveTo(x, y);
+    circle.arc(x, y, 10, 0, 2 * Math.PI);
+    this.ctx.fill(circle);
+    this.ctx.restore();
+  };
+
   onMouseMove = event => {
-    //console.log("on mouse move", event.button, event.buttons);
-    if (!this.draw) return;
+    console.log("on mouse move", event.buttons);
     const { offsetX: x, offsetY: y } = event.nativeEvent;
+
+    if (event.buttons & 32) {
+      console.log(event.pressure);
+      this.erase({ x, y, alpha: event.pressure });
+    }
+
+    if (!this.draw) return;
+
     if (event.pressure) this.pressure = event.pressure;
     else this.pressure = 0;
     //console.log(this.pressure);
@@ -204,8 +225,12 @@ class App extends Component {
     this.draw = true;
     this.ctx.fillStyle = this.state.drawColor;
     this.ctx.strokeStyle = this.state.drawColor;
-    this.ctx.globalAlpha = 0.1;
-    this.spraySize = this.brushes[this.state.activeBrush];
+    this.ctx.globalAlpha = this.drawType === "circle" ? 0.1 : 1;
+    if (this.state.activeBrush >= 0) {
+      this.spraySize = this.brushes[this.state.activeBrush];
+    } else {
+      this.spraySize = 2;
+    }
     if (!this.drawInterval) {
       this.drawInterval = setInterval(this.sprayPaint, 1);
     }
@@ -247,16 +272,21 @@ class App extends Component {
   onGotPointerCapture = event => {
     console.log(
       "got pointer",
-      event.pointerId,
+      event.nativeEvent.pointerId,
       event.pointerType,
       event.nativeEvent
     );
     //this.canvas.setPointerCapture(event.pointerId);
+    console.log(this.refCanvas);
   };
 
   Canvas(w = 700, h = 800) {
     return (
-      <Canvas>
+      <Canvas
+        innerRef={x => {
+          this.refCanvas = x;
+        }}
+      >
         <canvas
           id="drawCanvas"
           touch-action="none"
@@ -297,6 +327,12 @@ class App extends Component {
     return (
       <BrushMenu>
         Brushes
+        <Brush
+          onClick={() => this.setState({ activeBrush: -1 })}
+          active={this.state.activeBrush === -1}
+        >
+          A
+        </Brush>
         {this.brushes.map((brushValue, brushNumber) => (
           <Brush
             onClick={() => {
@@ -317,7 +353,10 @@ class App extends Component {
       <Menu showMenu={this.state.showMenu}>
         Menu
         <MenuButton onClick={this.clearCanvas}>Clear</MenuButton>
-        <MenuButton onClick={this.clearCanvas}>Close</MenuButton>
+        <MenuButton onClick={() => (this.drawType = "line")}>Line</MenuButton>
+        <MenuButton onClick={() => (this.drawType = "circle")}>
+          Brush
+        </MenuButton>
       </Menu>
     );
   };
