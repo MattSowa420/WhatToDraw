@@ -192,11 +192,11 @@ class App extends Component {
   };
 
   onMouseMove = event => {
-    console.log("on mouse move", event.buttons);
+    //console.log("on mouse move", event.buttons);
     const { offsetX: x, offsetY: y } = event.nativeEvent;
 
     if (event.buttons & 32) {
-      console.log(event.pressure);
+      //console.log(event.pressure);
       this.erase({ x, y, alpha: event.pressure });
     }
 
@@ -218,7 +218,7 @@ class App extends Component {
   };
 
   onMouseDown = event => {
-    console.log("mouse down");
+    //console.log("mouse down");
     const { offsetX: x, offsetY: y } = event.nativeEvent;
     this.lastPosition = { x, y };
     this.pos = { x, y };
@@ -234,19 +234,19 @@ class App extends Component {
     if (!this.drawInterval) {
       this.drawInterval = setInterval(this.sprayPaint, 1);
     }
-    console.log("interval", this.drawInterval);
+    //console.log("interval", this.drawInterval);
   };
 
   onMouseUp = event => {
-    console.log("on mouse up");
+    //console.log("on mouse up");
     this.draw = false;
-    console.log("clear interval");
+    //console.log("clear interval");
     clearInterval(this.drawInterval);
     this.drawInterval = null;
   };
 
   onMouseLeave = event => {
-    console.log("on mouse leave");
+    //console.log("on mouse leave");
     this.onMouseUp();
     this.setState({ showMenu: true });
   };
@@ -260,24 +260,24 @@ class App extends Component {
   };
 
   pointerUp = () => {
-    console.log("pointer up");
+    //console.log("pointer up");
     this.onMouseUp();
   };
 
   pointerCancel = () => {
-    console.log("pointer cancel");
+    //console.log("pointer cancel");
     this.onMouseUp();
   };
 
   onGotPointerCapture = event => {
-    console.log(
-      "got pointer",
-      event.nativeEvent.pointerId,
-      event.pointerType,
-      event.nativeEvent
-    );
+    // console.log(
+    //   "got pointer",
+    //   event.nativeEvent.pointerId,
+    //   event.pointerType,
+    //   event.nativeEvent
+    // );
     //this.canvas.setPointerCapture(event.pointerId);
-    console.log(this.refCanvas);
+    //console.log(this.refCanvas);
   };
 
   Canvas(w = 700, h = 800) {
